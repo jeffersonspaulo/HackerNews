@@ -30,38 +30,18 @@ namespace HackerNews.BestStories.Api.Services
 
             _logger.LogInformation("Fetching {Count} best stories", n);
 
-            // Get best stories IDs
             var bestStoriesIds = await _client.GetBestStoriesIdsAsync(cancellationToken);
 
-            if (bestStoriesIds.Count == 0)
+            if (bestStoriesIds?.Count == 0)
             {
                 _logger.LogWarning("No best stories IDs found");
                 return new List<StoryResponse>();
             }
 
-            // Take only the first n IDs
             var idsToFetch = bestStoriesIds.Take(n).ToList();
 
-            // Fetch story details
-            var stories = new List<StoryResponse>();
-            foreach (var storyId in idsToFetch)
-            {
-                var story = await _client.GetStoryAsync(storyId, cancellationToken);
-                if (story != null)
-                {
-                    stories.Add(new StoryResponse
-                    {
-                        Title = story.Title,
-                        Uri = story.Url,
-                        PostedBy = story.By,
-                        Time = DateTimeExtensions.FromUnixTimestamp(story.Time),
-                        Score = story.Score,
-                        CommentCount = story.Descendants
-                    });
-                }
-            }
+            var stories = await FetchStoriesWithConcurrencyControlAsync(idsToFetch, cancellationToken);
 
-            // Sort by score descending
             var sortedStories = stories.OrderByDescending(s => s.Score).ToList();
 
             _logger.LogInformation("Successfully fetched {Count} best stories", sortedStories.Count);
@@ -77,6 +57,43 @@ namespace HackerNews.BestStories.Api.Services
                     $"N must be between 1 and {_bestStoriesOptions.MaxN}",
                     nameof(n));
             }
+        }
+
+        private async Task<List<StoryResponse>> FetchStoriesWithConcurrencyControlAsync(List<int> storyIds, CancellationToken cancellationToken)
+        {
+            var semaphore = new SemaphoreSlim(_bestStoriesOptions.MaxConcurrency);
+
+            var tasks = storyIds.Select(async id =>
+            {
+                await semaphore.WaitAsync(cancellationToken);
+                try
+                {
+                    return await _client.GetStoryAsync(id, cancellationToken);
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
+            });
+
+            var results = await Task.WhenAll(tasks);
+            var storiesResult = results.Where(s => s != null);
+
+            var stories = new List<StoryResponse>();
+            foreach (var story in storiesResult)
+            {
+                stories.Add(new StoryResponse
+                {
+                    Title = story.Title,
+                    Uri = story.Url,
+                    PostedBy = story.By,
+                    Time = DateTimeExtensions.FromUnixTimestamp(story.Time),
+                    Score = story.Score,
+                    CommentCount = story.Descendants
+                });
+            }
+
+            return stories;
         }
     }
 }

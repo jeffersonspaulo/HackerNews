@@ -1,16 +1,17 @@
-﻿using HackerNews.BestStories.Api.Services.Interfaces;
+﻿using HackerNews.BestStories.Api.Models.Dtos.Response;
+using HackerNews.BestStories.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HackerNews.BestStories.Api.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
-    public class StoriesController : ControllerBase
+    [Route("api/beststories")]
+    public class BestStoriesController : ControllerBase
     {
         private readonly IBestStoriesService _bestStoriesService;
-        private readonly ILogger<StoriesController> _logger;
+        private readonly ILogger<BestStoriesController> _logger;
 
-        public StoriesController(IBestStoriesService bestStoriesService, ILogger<StoriesController> logger)
+        public BestStoriesController(IBestStoriesService bestStoriesService, ILogger<BestStoriesController> logger)
         {
             _bestStoriesService = bestStoriesService ?? throw new ArgumentNullException(nameof(bestStoriesService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -25,8 +26,8 @@ namespace HackerNews.BestStories.Api.Controllers
         /// <response code="200">Returns the array of best stories</response>
         /// <response code="400">If n is invalid (not between 1 and 200)</response>
         /// <response code="500">If an error occurred while fetching stories</response>
-        [HttpGet("best")]
-        [ProducesResponseType(typeof(List<dynamic>), StatusCodes.Status200OK)]
+        [HttpGet]
+        [ProducesResponseType(typeof(List<StoryResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetBestStories([FromQuery] int n = 10, CancellationToken cancellationToken = default)

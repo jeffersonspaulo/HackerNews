@@ -36,7 +36,7 @@ namespace HackerNews.BestStories.Api.Infrastructure.HttpClients
                 response.EnsureSuccessStatusCode();
 
                 var content = await response.Content.ReadAsStringAsync(cancellationToken);
-                var ids = JsonSerializer.Deserialize<List<int>>(content, JsonOptions);
+                var ids = JsonSerializer.Deserialize<List<int>>(content, JsonOptions) ?? new List<int>();
 
                 _logger.LogInformation("Successfully fetched {Count} best stories IDs", ids?.Count ?? 0);
 
