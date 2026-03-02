@@ -4,9 +4,7 @@ using HackerNews.BestStories.Api.Services.Interfaces;
 using HackerNews.BestStories.Api.Shared.Extensions;
 using HackerNews.BestStories.Api.Shared.Options;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Collections.Concurrent;
 
 namespace HackerNews.BestStories.Api.Services
 {
@@ -131,7 +129,15 @@ namespace HackerNews.BestStories.Api.Services
 
                 try
                 {
-                    return await GetStoryCachedAsync(id, cancellationToken);
+                    try
+                    {
+                        return await GetStoryCachedAsync(id, cancellationToken);
+                    }
+                    catch (Exception ex) when (ex is not OperationCanceledException)
+                    {
+                        _logger.LogWarning(ex, "Failed to fetch story {StoryId}", id);
+                        return null;
+                    }
                 }
                 finally
                 {

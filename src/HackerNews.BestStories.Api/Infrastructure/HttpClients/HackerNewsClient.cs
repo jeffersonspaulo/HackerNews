@@ -64,13 +64,21 @@ namespace HackerNews.BestStories.Api.Infrastructure.HttpClients
                 }
 
                 var content = await response.Content.ReadAsStringAsync(cancellationToken);
-                var story = JsonSerializer.Deserialize<HackerNewsItemContract>(content, JsonOptions);
-
-                return story;
+                return JsonSerializer.Deserialize<HackerNewsItemContract>(content, JsonOptions);
+            }
+            catch (TaskCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+            {
+                _logger.LogWarning(ex, "Timeout fetching story {StoryId} from Hacker News API", id);
+                return null;
+            }
+            catch (OperationCanceledException ex) when (cancellationToken.IsCancellationRequested)
+            {
+                _logger.LogInformation(ex, "Request cancelled while fetching story {StoryId}", id);
+                throw; 
             }
             catch (HttpRequestException ex)
             {
-                _logger.LogError(ex, "Error fetching story {StoryId} from Hacker News API", id);
+                _logger.LogWarning(ex, "HTTP error fetching story {StoryId} from Hacker News API", id);
                 return null;
             }
         }
