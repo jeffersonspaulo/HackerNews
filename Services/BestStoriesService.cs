@@ -74,6 +74,8 @@ namespace HackerNews.BestStories.Api.Services
             if (_cache.TryGetValue(cacheKey, out List<int>? cachedIds) && cachedIds is not null)
                 return cachedIds;
 
+            _logger.LogInformation("Cache miss for best stories IDs. Fetching from Hacker News.");
+
             var ids = await _client.GetBestStoriesIdsAsync(cancellationToken) ?? new List<int>();
 
             _cache.Set(
@@ -95,6 +97,7 @@ namespace HackerNews.BestStories.Api.Services
                 return cached;
 
             var story = await _client.GetStoryAsync(storyId, cancellationToken);
+
             if (story is null) return null;
 
             var mapped = new StoryResponse
@@ -125,6 +128,7 @@ namespace HackerNews.BestStories.Api.Services
             var tasks = storyIds.Select(async id =>
             {
                 await semaphore.WaitAsync(cancellationToken);
+
                 try
                 {
                     return await GetStoryCachedAsync(id, cancellationToken);
