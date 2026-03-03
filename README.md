@@ -51,6 +51,34 @@ The API will start locally (typically on `https://localhost:xxxx`).
 
 Swagger UI is available in Development environment.
 
+Example: 
+```bash
+https://localhost:7181/swagger/index.html
+```
+
+---
+
+## Troubleshooting
+
+### HTTPS development certificate issue
+
+If you encounter an HTTPS or SSL certificate error when running the API locally, you may need to trust the .NET development certificate.
+
+Run the following command:
+
+```bash
+dotnet dev-certs https --trust
+```
+
+Then restart the application.
+
+If the issue persists, you can clean and recreate the certificate:
+
+```bash
+dotnet dev-certs https --clean
+dotnet dev-certs https --trust
+```
+
 ---
 
 ## 🧪 Running Tests
