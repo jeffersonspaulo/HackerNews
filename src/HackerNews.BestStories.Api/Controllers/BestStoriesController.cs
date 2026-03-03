@@ -30,7 +30,7 @@ namespace HackerNews.BestStories.Api.Controllers
         [ProducesResponseType(typeof(List<StoryResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetBestStories([FromQuery] int n = 10, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> GetBestStories([FromQuery] int? n, CancellationToken cancellationToken = default)
         {
             try
             {

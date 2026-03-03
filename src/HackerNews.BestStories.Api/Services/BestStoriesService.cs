@@ -30,21 +30,23 @@ namespace HackerNews.BestStories.Api.Services
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
         }
 
-        public async Task<List<StoryResponse>> GetBestStoriesAsync(int n, CancellationToken cancellationToken = default)
+        public async Task<List<StoryResponse>> GetBestStoriesAsync(int? n, CancellationToken cancellationToken = default)
         {
-            ValidateInput(n);
+            var count = n ?? _bestStoriesOptions.DefaultN;
 
-            _logger.LogInformation("Fetching {Count} best stories", n);
+            ValidateInput(count);
+
+            _logger.LogInformation("Fetching {Count} best stories", count);
 
             var bestStoriesIds = await GetBestStoriesIdsCachedAsync(cancellationToken);
 
-            if (bestStoriesIds?.Count == 0)
+            if (bestStoriesIds is null || bestStoriesIds.Count == 0)
             {
                 _logger.LogWarning("No best stories IDs found");
                 return new List<StoryResponse>();
             }
 
-            var idsToFetch = bestStoriesIds.Take(n).ToList();
+            var idsToFetch = bestStoriesIds.Take(count).ToList();
 
             var stories = await FetchStoriesWithConcurrencyControlAsync(idsToFetch, cancellationToken);
 

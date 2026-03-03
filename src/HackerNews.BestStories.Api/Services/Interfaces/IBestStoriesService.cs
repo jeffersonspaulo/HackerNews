@@ -10,6 +10,6 @@ namespace HackerNews.BestStories.Api.Services.Interfaces
         /// <param name="n">Number of stories to retrieve</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>List of best stories</returns>
-        Task<List<StoryResponse>> GetBestStoriesAsync(int n, CancellationToken cancellationToken = default);
+        Task<List<StoryResponse>> GetBestStoriesAsync(int? n, CancellationToken cancellationToken = default);
     }
 }
